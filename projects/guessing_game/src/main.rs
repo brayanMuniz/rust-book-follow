@@ -6,6 +6,12 @@ fn main() {
     // Guess a random number
     let secret_number: u32 = rand::thread_rng().gen_range(1..=100);
     let mut tries_left: u32 = 10;
+
+    // Ask the user for their name
+    println!("Type in your name");
+    let user_input = get_user_name();
+    println!("Hello {user_input}");
+
     while tries_left > 0 {
         println!("Enter your guess!");
         let mut user_input = String::new();
@@ -36,4 +42,13 @@ fn main() {
     } else {
         println!("Sorry, you lost");
     }
+}
+
+fn get_user_name() -> String {
+    let mut user_input = String::new();
+    io::stdin()
+        .read_line(&mut user_input)
+        .expect("Could not read it :(");
+
+    user_input
 }
