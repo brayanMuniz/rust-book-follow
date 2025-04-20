@@ -1,5 +1,19 @@
 use std::collections::HashMap;
 
+#[derive(Debug)]
+enum MessageType {
+    AddEmployee(String, Department),
+    RemoveEmployee(String, Department),
+    InvalidMessage,
+}
+
+#[derive(Debug, Hash, Eq, PartialEq)] // explicitly derive Hash for it to be usable as a key.
+enum Department {
+    Engineering,
+    Sales,
+    Accounting,
+}
+
 fn main() {
     // 1. Given a list of integers, use a vector and return the median
     // (when sorted, the value in the middle position) and mode
@@ -34,6 +48,27 @@ fn main() {
     // to a department in a company; for example, “Add Sally to Engineering” or “Add Amir to Sales.”
     // Then let the user retrieve a list of all people in a department or all people in the company
     // by department, sorted alphabetically.
+
+    let mut record_keeper = HashMap::new();
+    record_keeper.insert(Department::Engineering, 0);
+    record_keeper.insert(Department::Sales, 0);
+    record_keeper.insert(Department::Accounting, 0);
+}
+
+// TODO:
+// Add <Name> to <Department>
+// Remove <Name> from <Department>
+fn extract_message_type(message: &str) -> MessageType {
+    let words = message.split_whitespace().collect::<Vec<_>>();
+    if words.len() < 4 {
+        return MessageType::InvalidMessage;
+    }
+
+    if words[0] == "Add" {
+        todo!();
+    } else if words[0] == "Remove" {
+    }
+    MessageType::InvalidMessage
 }
 
 fn convert_to_pig_latin(str: &str) -> String {
