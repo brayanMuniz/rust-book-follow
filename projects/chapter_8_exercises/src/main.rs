@@ -1,10 +1,14 @@
+use core::fmt;
 use std::collections::HashMap;
+use std::io;
+use std::str::FromStr;
 
 #[derive(Debug)]
 enum MessageType {
     AddEmployee(String, Department),
     RemoveEmployee(String, Department),
     InvalidMessage,
+    Exit,
 }
 
 #[derive(Debug, Hash, Eq, PartialEq)] // explicitly derive Hash for it to be usable as a key.
@@ -12,6 +16,29 @@ enum Department {
     Engineering,
     Sales,
     Accounting,
+}
+
+impl FromStr for Department {
+    type Err = (); //  unit type, often used for “no information” errors.
+    fn from_str(input: &str) -> Result<Department, Self::Err> {
+        match input {
+            "Engineering" | "eng" => Ok(Department::Engineering),
+            "Sales" | "sal" => Ok(Department::Sales),
+            "Accounting" | "acc" => Ok(Department::Accounting),
+            _ => Err(()),
+        }
+    }
+}
+
+impl fmt::Display for Department {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            Department::Engineering => "Engineering",
+            Department::Accounting => "Accounting",
+            Department::Sales => "Sales",
+        };
+        write!(f, "{s}")
+    }
 }
 
 fn main() {
@@ -49,25 +76,78 @@ fn main() {
     // Then let the user retrieve a list of all people in a department or all people in the company
     // by department, sorted alphabetically.
 
-    let mut record_keeper = HashMap::new();
-    record_keeper.insert(Department::Engineering, 0);
-    record_keeper.insert(Department::Sales, 0);
-    record_keeper.insert(Department::Accounting, 0);
+    let mut record_keeper: HashMap<Department, Vec<String>> = HashMap::new();
+    record_keeper.insert(Department::Engineering, vec![]);
+    record_keeper.insert(Department::Sales, vec![]);
+    record_keeper.insert(Department::Accounting, vec![]);
+
+    println!("");
+    println!("Add or remove employees");
+
+    loop {
+        let user_input = get_user_input();
+        let message = extract_message_type(&user_input);
+        match message {
+            MessageType::AddEmployee(name, dep) => {
+                println!("Adding! Name is {name}. Department is {dep}");
+                record_keeper.entry(dep).or_insert_with(Vec::new).push(name);
+            }
+            MessageType::RemoveEmployee(name, dep) => {
+                println!("Removing! Name is {name}. Department is {dep}");
+                if let Some(vec) = record_keeper.get_mut(&dep) {
+                    vec.retain(|x| x != &name);
+                }
+            }
+            MessageType::Exit => {
+                println!("Exiting ...");
+                break;
+            }
+            MessageType::InvalidMessage => println!("Invalid message, type again ..."),
+        }
+
+        for (key, val) in &record_keeper {
+            println!("{key}, {:?}", val);
+        }
+    }
 }
 
-// TODO:
+fn get_user_input() -> String {
+    let mut user_input = String::new();
+    io::stdin()
+        .read_line(&mut user_input)
+        .expect("Could not read user input");
+
+    user_input
+}
+
+// Exit
 // Add <Name> to <Department>
 // Remove <Name> from <Department>
 fn extract_message_type(message: &str) -> MessageType {
-    let words = message.split_whitespace().collect::<Vec<_>>();
+    let words = message.split_whitespace().collect::<Vec<&str>>();
+    if words[0] == "Exit" {
+        return MessageType::Exit;
+    }
     if words.len() < 4 {
         return MessageType::InvalidMessage;
     }
 
-    if words[0] == "Add" {
-        todo!();
-    } else if words[0] == "Remove" {
+    if words[0] == "Add" || words[0] == "add" {
+        if let Ok(department) = words[3].parse::<Department>() {
+            return MessageType::AddEmployee(words[1].to_string(), department);
+        } else {
+            return MessageType::InvalidMessage;
+        }
     }
+
+    if words[0] == "Remove" || words[0] == "remove" {
+        if let Ok(department) = words[3].parse::<Department>() {
+            return MessageType::RemoveEmployee(words[1].to_string(), department);
+        } else {
+            return MessageType::InvalidMessage;
+        }
+    }
+
     MessageType::InvalidMessage
 }
 
