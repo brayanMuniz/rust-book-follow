@@ -1,35 +1,22 @@
-use std::{env, fs};
+use std::{env, process};
+
+use minigrep::{Config, run};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    let config = Config::new(&args);
+    // return Ok if ok, else use the closure
+    let config = Config::build(&args).unwrap_or_else(|err| {
+        println!("Problem parsing arrguments {err}");
+        process::exit(1);
+    });
 
     println!("Query: {}", config.query);
     println!("File path: {}", config.file_path);
     println!("");
 
-    let contents =
-        fs::read_to_string(config.file_path).expect("Should have been able to read the file");
-
-    println!("Contents: \n{contents}")
-}
-
-#[derive(Debug)]
-struct Config {
-    query: String,
-    file_path: String,
-}
-
-impl Config {
-    // TODO: usually new is not supposed to fail, change this to build
-    fn new(args: &[String]) -> Config {
-        if args.len() < 3 {
-            panic!("Not enough arguments!");
-        }
-        let query = args[1].clone();
-        let file_path = args[2].clone();
-
-        Config { query, file_path }
+    if let Err(e) = run(config) {
+        println!("Application failed to run: {e}");
+        process::exit(1);
     }
 }
