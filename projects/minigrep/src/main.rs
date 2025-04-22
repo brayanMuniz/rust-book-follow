@@ -7,7 +7,7 @@ fn main() {
 
     // return Ok if ok, else use the closure
     let config = Config::build(&args).unwrap_or_else(|err| {
-        println!("Problem parsing arrguments {err}");
+        eprintln!("Problem parsing arrguments {err}");
         process::exit(1);
     });
 
@@ -16,7 +16,7 @@ fn main() {
     println!("");
 
     if let Err(e) = run(config) {
-        println!("Application failed to run: {e}");
+        eprintln!("Application failed to run: {e}");
         process::exit(1);
     }
 }
